@@ -2280,3 +2280,13 @@ Recommended: 516.25
 [2022.10.08-16.12.28:099][298]LogViewport: Scene viewport resized to 194x121, mode Windowed.
 [2022.10.08-16.12.28:632][328]LogViewport: Scene viewport resized to 475x413, mode Windowed.
 [2022.10.08-16.12.28:931][344]LogSlate: Window 'ABP_PistolLayers' being destroyed
+[2022.10.08-16.22.27:407][337]LogAudioMixer: Warning: FMixerPlatformXAudio2: Changing default audio render device to new device: Role=Console, DeviceName=2476WM (NVIDIA High Definition Audio), InstanceID=1
+[2022.10.08-16.22.27:744][337]LogAudioMixer: Display: FMixerNullCallback: Simulating a h/w device callback at [21ms], ThreadID=8660
+[2022.10.08-16.22.27:745][337]LogAudioMixer: Display: Successful Swap new Device is (NumChannels=2, SampleRate=48000, DeviceID={0.0.0.00000000}.{913b3f30-d091-4a35-9768-9ed005e502fb}, Name=2476WM (NVIDIA High Definition Audio)), Reason=FMixerPlatformXAudio2::OnDefaultRenderDeviceChanged, InstanceID=1, DurationMS=32.16
+[2022.10.08-16.22.27:745][337]LogAudioMixer: Display: Output buffers initialized: Frames=1024, Channels=2, Samples=2048, InstanceID=1
+[2022.10.08-16.22.27:747][338]LogAudioMixer: Display: Starting AudioMixerPlatformInterface::RunInternal(), InstanceID=1
+[2022.10.08-16.22.48:926][401]LogAudioMixer: Warning: FMixerPlatformXAudio2: Changing default audio render device to new device: Role=Console, DeviceName=扬声器 (Realtek High Definition Audio), InstanceID=1
+[2022.10.08-16.22.48:926][401]LogAudioMixer: Display: FMixerNullCallback: Simulating a h/w device callback at [21ms], ThreadID=8660
+[2022.10.08-16.22.49:259][401]LogAudioMixer: Display: Successful Swap new Device is (NumChannels=2, SampleRate=48000, DeviceID={0.0.0.00000000}.{bd834e85-4ac8-4fa8-bf10-cebb1be56e5d}, Name=扬声器 (Realtek High Definition Audio)), Reason=FMixerPlatformXAudio2::OnDefaultRenderDeviceChanged, InstanceID=1, DurationMS=14.73
+[2022.10.08-16.22.49:259][401]LogAudioMixer: Display: Output buffers initialized: Frames=1024, Channels=2, Samples=2048, InstanceID=1
+[2022.10.08-16.22.49:262][402]LogAudioMixer: Display: Starting AudioMixerPlatformInterface::RunInternal(), InstanceID=1
