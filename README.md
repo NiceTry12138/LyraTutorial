@@ -114,3 +114,52 @@
 ![关联动画蓝图和动画层](./Image/Lyra_13.png)
 
 使用`Link Anim Class Layers`节点，绑定动画蓝图和动画层
+
+## 距离匹配
+
+角色移动的时候，脚步与移速并不可能完美对齐
+
+会使用插件`Animation Locomotion Library`中的一些函数节点
+
+首先是，动画才需要距离匹配，所以需要关注的文件就是`ABP_ItemLayerBase`，这个文件中定义了动作节点会输出的动作文件
+
+然后就是需要确定哪些动作需要做步幅匹配，比如 Start、Stop、Cycle 三个动作就是做步幅匹配的
+
+![应用序列求值器](./Image/Lyra_14.png)
+
+这里使用序列求值器来做步幅匹配，重点为**显式时间**，也就是`Explicit Time`，可以用来控制动画当前行进进度
+
+![应用序列求值器](./Image/Lyra_15.png)
+
+需要注意的就是，这个`SetupStartAnim`函数是绑定在变为相关时触发，也就是状态机行进到该状态时，所以此时需要将显式时间设置为0，从头开始播放动画
+
+如果不在进入状态时将显式时间设置为0，则该动画就不是从头播放，而是从上次做计算时设置的显式时间开始，在当前环境下这是个很明显的错误
+
+![应用序列求值器](./Image/Lyra_16.png)
+
+然后就是后续更新时绑定函数`UpdateStartAnim`
+
+以`MoveStart`为例，角色是逐渐加速，直到进入行走循环的过程
+
+有一个节点`Advance Time by Distance Matching` 根据位移去计算一个显式时间，在`Lyra`这个项目的`ABP_ItemAnimLayersBase`中相同位置的Update函数对该函数有一段注释
+
+```
+AnimBP Tour #9
+This is an example of using Distance Matching to ensure that the distance traveled by the Start animation matches the distance traveled by the Pawn owner. This prevents foot sliding by keeping the animation and the motion model in sync.
+This effectively controls the play rate of the Start animation. We clamp the effective play rate to prevent the animation from playing too slowly or too quickly.
+If the effective play rate is clamped, we will still see some sliding. To fix this, we use Stride Warping later to adjust the pose to correct for the remaining difference.
+The Animation Locomotion Library plugin is required to have access to Distance Matching functions.
+```
+
+机翻结果为：
+
+```
+这是一个使用 "Distance Matching" 确保 "Start" 动画移动的距离与典当所有者移动的距离相匹配的示例。这可以通过保持动画和运动模型同步来防止脚滑动。
+这可以有效地控制“开始”动画的播放速率。我们限制有效播放速率，以防止动画播放过慢或过快。
+如果有效播放速率被限制，我们仍然会看到一些滑动。为了解决这个问题，我们稍后使用“步幅扭曲”来调整姿势，以纠正剩余的差异。
+动画运动库插件需要访问距离匹配功能。
+```
+
+![Advance Time by Distance Matching](./Image/Lyra_17.png)
+
+通过上图可以看到`Advance Time by Distance Matching`的几个参数，前两个可以直接获得，第三个`Distance Traveled`每帧位移，这个位移需要到基础动画蓝图，也就是`ABP_CharacterBase`中去计算，并且将值封装到`Property Access`这种线程安全的获取方式中
