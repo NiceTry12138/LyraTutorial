@@ -125,6 +125,8 @@
 
 然后就是需要确定哪些动作需要做步幅匹配，比如 Start、Stop、Cycle 三个动作就是做步幅匹配的
 
+### Start 起跑动画
+
 ![应用序列求值器](./Image/Lyra_14.png)
 
 这里使用序列求值器来做步幅匹配，重点为**显式时间**，也就是`Explicit Time`，可以用来控制动画当前行进进度
@@ -163,3 +165,140 @@ The Animation Locomotion Library plugin is required to have access to Distance M
 ![Advance Time by Distance Matching](./Image/Lyra_17.png)
 
 通过上图可以看到`Advance Time by Distance Matching`的几个参数，前两个可以直接获得，第三个`Distance Traveled`每帧位移，这个位移需要到基础动画蓝图，也就是`ABP_CharacterBase`中去计算，并且将值封装到`Property Access`这种线程安全的获取方式中
+
+在`ABP_CharacterBase`中新增线程安全函数`UpdateLocationData`，新增变量`WorldLocation`记录上一帧坐标，新增变量`DisplacementSinceLastUpdate`计算距离变化，新增变量`bIsFirstUpdate`用于判断是否是第一次计算(初始值为true)
+
+![UpdateLocationData](./Image/Lyra_18.png)
+
+随后记得把`UpdateLocationData`函数添加到`Blueprint Thread Safe Update Animation`中，并将`bIsFirstUpdate`设置为false
+
+![UpdateLocationData](./Image/Lyra_19.png)
+
+此时我们通过`UpdateLocationData`函数计算得到了`DisplacementSinceLastUpdate`变量，接下来就是编写 纯函数、线程安全、返回值参数名为RetureValue 的获取该值的函数
+
+不过跟上面获得移动组件的PropertyAccess函数不同，由于这个`DisplacementSinceLastUpdate`定义在`ABP_CharacterBase`中，但是使用却是在`ABP_ItemLayerBase`中，所以需要在`ABP_ItemLayerBase`中定义这样的获取函数
+
+为了一劳永逸，**直接定义获得动画蓝图的函数**即可
+
+![动画层中获得动画蓝图](./Image/Lyra_20.png)
+
+![获得每帧位移](./Image/Lyra_21.png)
+
+**曲线名称是什么？**
+
+![曲线名称](./Image/Lyra_22.png)
+
+以官方提供的lyra动画`MF_Pistol_Jog_Fwd_Start`为例，下面的Gif图片展示了如何一键添加距离曲线，这个是插件提供的功能
+
+![曲线名称](./Gif/Lyra_Gif_02.gif)
+
+![曲线名称](./Image/Lyra_23.png)
+
+那么`Start`起跑动画就做完了，接下来要做的就是`Cycle`跑动的循环动画
+
+### Cycle 跑步循环动画
+
+起跑动画做距离匹配用的是**动态调整动画显式时间**的，但是循环跑动动画是不能通过调整显式时间来做距离匹配的，因为它是循环动画，去调整显式时间(播放进度)是没有意义的，所以针对循环动画要调整的是**播放速率(Play Rate)**
+
+![Cycle动态设置速率](./Image/Lyra_24.png)
+
+![Cycle动态设置速率](./Image/Lyra_25.png)
+
+Cycle的播放速率与移动速度相关，所以老样子要在`ABP_CharacterBase`中添加移速相关的变量，方便`ABP_ItemLayerBase`获取
+
+![Cycle动态设置速率](./Image/Lyra_26.png)
+
+在计算每帧位移的时候，也可以顺便计算每帧的移动速度，只需要使用位移除以DeltaTime即可
+
+> 这里使用`Safe Divide`其实就是除以的意思  
+> 别忘了在`Blueprint Thread Safe Update Animation`函数中为`UpdateLocationData`传入**DeltaTime**参数
+
+![Cycle动态设置速率](./Image/Lyra_27.png)
+
+### Stop 停止动画
+
+与Start状态部分相同，使用序列求值器(Sequence Evaluator)
+
+![设置Stop状态的序列求值器](./Image/Lyra_28.png)
+
+同样要设置进入相关状态时，显式时间为0
+
+![设置进入Stop状态的初始化](./Image/Lyra_29.png)
+
+然后就是处理Update函数了
+
+**什么时候要播放Stop动画？**应该是**有速度**，但是**没有加速度**的情况
+
+![Stop状态的更新函数](./Image/Lyra_30.png)
+
+1. 首先就是是否播放Stop动画的判断：有速度(`HasVelocity`)和无加速度(`HasAcceleration`)，两个参数封装在动画蓝图`ABP_CharacterBase`中，所以可以用前面定义的获得动画蓝图的`Property Access`获得
+
+2. 使用`Predic Ground Movement Stop Location`计算移动停止的坐标，该函数的参数都封装在`MovementComponent`中，所以需要写一个获得`Character Movement`的`Property Access`函数
+
+3. 这里获得的速度是**上一帧**计算得到的速度
+
+4. 这里额外判断的一下**距离停止坐标的距离是否大于0**，大于0才需要做距离匹配
+
+5. 当不需要做距离匹配的时候，直接将动画加速到结束即可(`Play Rate` = 1)
+
+### 问题解决
+
+通过上面的一系列操作，确实得到了一个基本满足距离匹配的动画蓝图
+
+但是当打开`output log`，会发现很多的警告
+
+![动画警告](./Image/Lyra_31.png)
+
+这个是因为动画的**曲线压缩设置**不匹配导致
+
+![动画警告](./Image/Lyra_32.png)
+
+新建基类为`Curve Compression Settings`为基类的`UniformIndexAnimCurveCompressionSettings`文件，设置其`Codec`为`Uniform Indexable`
+
+随后将所有的动画的曲线压缩设置替换为`UniformIndexAnimCurveCompressionSettings`
+
+![批量设置曲线压缩](./Gif/Lyra_Gif_03.gif)
+
+> Gif展示如何批量设置
+
+![动画警告](./Image/Lyra_33.png)
+
+最后点击压缩即可，警告解决
+
+## 步幅匹配
+
+步幅匹配就是 移动速度越快，步子迈的越开；移动速度越慢，步子迈的越小
+
+使用`Stride Warping`步幅扭曲节点来做步幅匹配
+
+![动画警告](./Image/Lyra_34.png)
+
+随后将该节点在Start和Cycle中使用，Stop状态只做距离匹配一般就够了不用步幅匹配 
+
+可以在角色的`Character Movement`中设置最大移动速度观察不同的效果
+
+**最大移速为200时**
+
+![200移速](./Gif/Lyra_Gif_04.gif)
+
+**最大移速为500时**
+
+![500移速](./Gif/Lyra_Gif_05.gif)
+
+## 同步组
+
+为了让两个状态的动画能够平滑过度，需要引入同步组
+
+这里的平滑过渡指的是左右脚匹配
+
+这里以Start和Cycle为例
+
+![添加同步标记](./Gif/Lyra_Gif_06.gif)
+
+使用`SyncMarkerAnimModifier`来自动添加左右脚的标记，需要给Start的动作和Cycle的动作都进行这样的标记处理
+
+![序列设置](./Image/Lyra_35.png)
+
+将`Start`和`Cycle`的序列都进行上图设置，`GroupName`必须相同
+
+## 移动的八方向
