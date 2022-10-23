@@ -5365,3 +5365,10 @@ Would you like to reload these packages? This will revert any changes you have m
 [2022.10.23-12.56.04:078][ 16]LogSavePackage: Moving output files for package: /Temp/Autosaves/Game/Animations/Lyra_Animation/Game/Characters/Heroes/Mannequin/Animations/Locomotion/Pistol/MF_Pistol_Jog_Fwd_Start_Auto3
 [2022.10.23-12.56.04:078][ 16]LogSavePackage: Moving 'E:/unreal/LyraTutorial/Saved/MF_Pistol_Jog_Fwd_Start_Auto3E01A15A942FA946D7D2D64B7C3E1005F.tmp' to 'E:/unreal/LyraTutorial/Saved/Autosaves/Game/Animations/Lyra_Animation/Game/Characters/Heroes/Mannequin/Animations/Locomotion/Pistol/MF_Pistol_Jog_Fwd_Start_Auto3.uasset'
 [2022.10.23-12.56.04:079][ 16]LogFileHelpers: Auto-saving content packages took 0.122
+[2022.10.23-12.58.48:437][148]Cmd: OBJ SAVEPACKAGE PACKAGE="/Game/Animations/ABP_ItemLayerBase" FILE="E:/unreal/LyraTutorial/Content/Animations/ABP_ItemLayerBase.uasset" SILENT=true
+[2022.10.23-12.58.48:465][148]LogSavePackage: Moving output files for package: /Game/Animations/ABP_ItemLayerBase
+[2022.10.23-12.58.48:466][148]LogSavePackage: Moving 'E:/unreal/LyraTutorial/Saved/ABP_ItemLayerBase97B8277840BCD5F6BF1400B7F26FD973.tmp' to 'E:/unreal/LyraTutorial/Content/Animations/ABP_ItemLayerBase.uasset'
+[2022.10.23-12.58.48:484][148]AssetCheck: New page: Asset Save: ABP_ItemLayerBase
+[2022.10.23-12.58.48:484][148]LogContentValidation: Display: Validating AnimBlueprint /Game/Animations/ABP_ItemLayerBase.ABP_ItemLayerBase
+[2022.10.23-12.58.48:721][162]BlueprintLog: New page: Compile ABP_ItemLayerBase
+[2022.10.23-12.58.48:842][162]LogUObjectHash: Compacting FUObjectHashTables data took   2.00ms
