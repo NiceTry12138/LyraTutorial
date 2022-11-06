@@ -302,3 +302,112 @@ Cycle的播放速率与移动速度相关，所以老样子要在`ABP_CharacterB
 将`Start`和`Cycle`的序列都进行上图设置，`GroupName`必须相同
 
 ## 移动的八方向
+
+传统做法：**混合空间**
+
+Lyra做法：**朝向扭曲**`OrienTation Warping`
+
+> 避免出现混合空间导致的脚与脚之间的交叉穿模，因为它是旋转扭曲整个下半身骨骼
+
+### 动画蓝图中计算朝向
+
+通过角色的朝向和速度可以计算出朝向与速度方向之间的角度
+
+![表示方向的枚举](./Image/Lyra_40.png)
+
+![获得速度方向与角色朝向之间角度](./Image/Lyra_36.png)
+
+![判断方向](./Image/Lyra_39.png)
+
+> 记得把该函数放到`BlueprintThreadSafeUpdateAnimation`中  
+
+> 把DeadZone提升为变量，方便配置  
+
+接下来便是编写通过角度判断前、后、左、右方向的工具函数`SelectCardinalDirectionFromAngle`
+
+![判断方向](./Image/Lyra_38.png)
+
+通过Angle和DeadZone，可以区域判断，至于原因下图可知
+
+![](./Image/Lyra_37.jpg)
+
+`45 + FwdDeadZone` 可以确定超前的区间角度，`135 - BwdDeadZone`可以确定朝后的区间
+
+判断完前后之后，判断左右就很快了，角度大于0就是右边，小于0就是坐标
+
+### 动画层中配置动画
+
+创建存储四方向的结构体
+
+![结构体](./Image/Lyra_41.png)
+
+分析一下：目前有四个动作（start、idel、cycle、stop），其中需要考虑八方向的是start、cycle、stop，start和stop只需要在变为相关时处理，cycle需要在Update函数中处理
+
+- Start
+
+![](./Image/Lyra_42.png)
+
+首先就是让序列求值器的动画序列取消绑定，并设置为Dynamic动态值，输入的动画都是根据朝向动态设置的
+
+![](./Image/Lyra_43.png)
+
+然后就是在Start动画变为相关时的绑定函数中，根据动画蓝图计算的朝向，选择对应的动画资源
+
+- Cycle
+
+![](./Image/Lyra_44.png)
+
+同理，Cycle的动画序列也改为Dynamic
+
+![](./Image/Lyra_45.png)
+
+同理，Cycle动画序列的Update的绑定函数中，根据动画蓝图计算的朝向，选择对应的动画资源，不过这里要使用`Set Sequence With Inertial Bledning`来混合动画
+
+> 一般在动画序列的Update绑定函数中使用 `Set Sequence With Inertial Bledning`来混合动画
+> 在动画序列的 `On Become Relevent` 变为相关中直接使用 `Set Sequence`
+
+- Stop
+
+![](./Image/Lyra_46.png)
+
+同理，Stop的动画求值器中的Sequene资源也改为Dynamic
+
+![](./Image/Lyra_47.png)
+
+同理，Stop的动画也只用在变为相关中直接`SetSequence`根据动画蓝图计算的朝向，选择对应的动画资源即可
+
+-----
+
+既然Stop、Cycle、Start的动画都从各自对应的**朝向动画结构体**中选取，那么MoveStart、MoveStop、MoveCycle三个变量也不需要了，可以直接删除
+
+### 设置数据
+
+![](./Image/Lyra_48.png)
+
+设置持枪角色动画层资源
+
+![](./Image/Lyra_49.png)
+
+把`Character Movement`的`Orient Rotation to Movement`旋转朝向运行设置为false
+
+![](./Image/Lyra_50.png)
+
+在类默认设置中，将`Use Controller Rotation Yaw`用控制器旋转Yaw勾上
+
+![](./Gif/Lyra_Gif_07.gif)
+
+### 开始八方向扭曲
+
+通过上面的操作，我们得到了四方向移动的动画，很明显是没有斜着移动的效果的
+
+朝向扭曲用到`Orientation Warping`节点
+
+![](./Image/Lyra_51.png)
+
+然后分别在Start和Cycle中使用即可
+
+![](./Image/Lyra_52.png)
+
+这里还有一点就是`Orientation Warping` 一定要在 `Stride Warping` **之前使用**，这个**先后顺序**不能错
+
+![](./Gif/Lyra_Gif_08.gif)
